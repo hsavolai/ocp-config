@@ -3,6 +3,6 @@ node('maven') {
   sh "ls" 
 }
 
-node('nodejs') {
-  sh "ls" 
-}
+//node('nodejs') {
+//  sh "ls" 
+//}

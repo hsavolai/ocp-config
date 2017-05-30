@@ -9,9 +9,9 @@ items:
     source:
       type: "Git"
       git:
-        uri: "https://github.com/hsavolai/ocp-config/message-wall/pipeline/JenkinsPipeline"
+        uri: "https://github.com/hsavolai/ocp-config.git"
     strategy:
-      type: "JenkinsPipeline"
+      type: "message-wall/pipeline/JenkinsPipeline"
       jenkinsPipelineStrategy:
         jenkinsfilePath: Jenkinsfile
 kind: List

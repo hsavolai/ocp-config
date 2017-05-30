@@ -11,8 +11,8 @@ items:
       git:
         uri: "https://github.com/hsavolai/ocp-config.git"
     strategy:
-      type: "message-wall/pipeline/JenkinsPipeline"
+      type: "JenkinsPipeline"
       jenkinsPipelineStrategy:
-        jenkinsfilePath: Jenkinsfile
+        jenkinsfilePath: pipeline/JenkinsPipeline/Jenkinsfile
 kind: List
 metadata: []

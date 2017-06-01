@@ -1,7 +1,7 @@
 // Here it shall be
 node('maven') {
 
-   def mvnCmd = "mvn -s ./nexus_openshift_settings.xml"
+   def mvnCmd = "mvn -s ./nexus-openshift-settings.xml"
 
   stage('Checkout Source') {
     git 'https://github.com/hsavolai/ose-wall-service.git'

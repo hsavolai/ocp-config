@@ -1,7 +1,12 @@
 // Here it shall be
 node('maven') {
-  sh "ls" 
+  stage('Checkout Source') {
+    git 'https://github.com/hsavolai/ose-wall-service.git'
+  }
 }
+
+
+
 
 //node('nodejs') {
 //  sh "ls" 

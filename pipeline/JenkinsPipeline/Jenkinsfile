@@ -7,16 +7,19 @@ node('maven') {
     git 'https://github.com/hsavolai/ose-wall-service.git'
   }
 
-  stage('Build war') {
-    sh "${mvnCmd} clean package -DskipTests"
+  stage('Unit Tests') {
+    sh "${mvnCmd} -P test clean test"
+  }
+  
+  stage('Build package') {
+    sh "${mvnCmd} -P prod clean package -DskipTests"
+  }
+  
+  stage('Code Analysis') {
+      sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube:9000/ -Dsonar.projectName=${JOB_BASE_NAME}"
   }
 
-
 }
-
-
-
-
 
 //node('nodejs') {
 //  sh "ls" 

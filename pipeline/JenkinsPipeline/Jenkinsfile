@@ -4,19 +4,28 @@ node('maven') {
    def mvnCmd = "mvn -s ./nexus-openshift-settings.xml"
 
   stage('Checkout Source') {
+    echo "Checkout Source"
     git 'https://github.com/hsavolai/ose-wall-service.git'
   }
 
   stage('Unit Tests') {
+    echo "Run unit tests"
     sh "${mvnCmd} -P test clean test"
   }
   
   stage('Build package') {
+    echo "Build package"
     sh "${mvnCmd} -P prod clean package -DskipTests"
   }
   
   stage('Code Analysis') {
-      sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube:9000/ -Dsonar.projectName=${JOB_BASE_NAME}"
+    echo "Code analysis"
+    sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube:9000/ -Dsonar.projectName=${JOB_BASE_NAME}"
+  }
+  
+  stage('Publish to Nexus') {
+    echo "Publish to Nexus"
+    sh "${mvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3:8081/repository/releases"
   }
 
 }

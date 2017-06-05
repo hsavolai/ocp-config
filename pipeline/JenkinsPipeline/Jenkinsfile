@@ -25,7 +25,7 @@ node('maven') {
   
   stage('Publish to Nexus') {
     echo "Publish to Nexus"
-    sh "${mvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3:8081/repository/releases"
+    sh "${mvnCmd} -P prod deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3:8081/repository/releases"
   }
 
 }

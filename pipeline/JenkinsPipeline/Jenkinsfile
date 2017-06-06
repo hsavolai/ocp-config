@@ -11,7 +11,7 @@ node('maven') {
   // Extract version and other properties from the pom.xml
   def groupId    = getGroupIdFromPom("pom.xml")
   def artifactId = getArtifactIdFromPom("pom.xml")
-  def version    = ""
+  def artifactVersion    = ""
 
   def buildNumber = sh (
     script: "git rev-list --all --count",
@@ -19,9 +19,9 @@ node('maven') {
   )
 
   stage('Define version') {
-    sh "${mvnCmd} clean build-helper:parse-version versions:set '-DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}-${buildNumber}'"
-    version = getVersionFromPom("pom.xml")
-    echo "The final package version is ${version}"
+    sh "${mvnCmd} clean build-helper:parse-version versions:set '-DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}-${buildNumber}.$BUILD_NUMBER'"
+    artifactVersion = getVersionFromPom("pom.xml")
+    echo "The final artifact version is ${artifactVersion}"
   }
   
 

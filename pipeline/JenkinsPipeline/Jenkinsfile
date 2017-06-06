@@ -14,7 +14,7 @@ node('maven') {
   def version    = ""
 
   stage('Define version') {
-    sh "${mvnCmd} clean build-helper:parse-version versions:set '-DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}-$BUILD_NUMBER'"
+    sh "${mvnCmd} clean build-helper:parse-version versions:set '-DnewVersion=${parsedVersion.majorVersion}.${parsedVersion.minorVersion}-$BUILD_NUMBER'"
     version = getVersionFromPom("pom.xml").replace("-SNAPSHOT","")
     sh "${mvnCmd} release:update-versions -DautoVersionSubmodules=true -DdevelopmentVersion=${version}"
     echo "The final package version is ${version}"

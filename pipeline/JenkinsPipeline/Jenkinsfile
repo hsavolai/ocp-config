@@ -12,10 +12,10 @@ node('maven') {
   def groupId    = getGroupIdFromPom("pom.xml")
   def artifactId = getArtifactIdFromPom("pom.xml")
   def version    = ""
-  def buildNumber = "git rev-list --all --count".execute().text
+  def buildNumber = `git rev-list --all --count`
 
   stage('Define version') {
-    sh "${mvnCmd} clean build-helper:parse-version versions:set '-DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}-$BUILD_NUMBER'"
+    sh "${mvnCmd} clean build-helper:parse-version versions:set '-DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}-${buildNumber}'"
     version = getVersionFromPom("pom.xml")
     echo "The final package version is ${version}"
   }

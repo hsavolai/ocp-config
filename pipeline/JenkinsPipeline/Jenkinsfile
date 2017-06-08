@@ -47,6 +47,8 @@ node('maven') {
       returnStdout: true
     ).trim()
     
+    echo "Get build output: ${GET_BUILD_OUTPUT}"
+    
     if (GET_BUILD_OUTPUT.contains("No resources found.")){
       sh "oc new-build --binary=true --name=ose-wall-service -i=redhat-openjdk18-openshift"
     }

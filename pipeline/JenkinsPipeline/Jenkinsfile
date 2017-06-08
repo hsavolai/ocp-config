@@ -42,7 +42,7 @@ node('maven') {
    stage('Build OpenShift Image') { 
     sh "oc project my-dev-project"
 
-    GET_BUILD_OUTPUT = sh (
+    def GET_BUILD_OUTPUT = sh (
       script: "oc get all -l build=ose-wall-service",
       returnStdout: true
     ).trim()
@@ -58,7 +58,7 @@ node('maven') {
  
    stage ('Deploy DEV') {
     sh "oc project my-dev-project"
-    GET_DC_OUTPUT = sh (
+    def GET_DC_OUTPUT = sh (
       script: "oc get dc/ose-wall-service",
       returnStdout: true
     ).trim()

@@ -34,10 +34,49 @@ node('maven') {
     sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube:9000/ -Dsonar.projectName=${JOB_BASE_NAME}"
   }
   
-  stage('Publish to Nexus') {
-    echo "Publish to Nexus"
-    sh "${mvnCmd} -P release clean deploy -DskipTests=true -Dpackaging=jar -DrepositoryId=nexus -DaltDeploymentRepository=nexus::default::http://nexus3:8081/repository/maven-releases"
-  }
+   stage('Publish to Nexus') {
+     echo "Publish to Nexus"
+     sh "${mvnCmd} -P release clean deploy -DskipTests=true -Dpackaging=jar -DrepositoryId=nexus -DaltDeploymentRepository=nexus::default::http://nexus3:8081/repository/maven-releases"
+   }
+  
+   stage('Build OpenShift Image') { 
+    sh "oc project my-dev-project"
+
+    GET_BUILD_OUTPUT = sh (
+      script: "oc get all -l build=ose-wall-service",
+      returnStdout: true
+    ).trim()
+    
+    if GET_BUILD_OUTPUT.contains("No resources found.") {
+      sh "oc new-build --binary=true --name=ose-wall-service -i=redhat-openjdk18-openshift"
+    }
+    
+    sh "oc start-build ose-wall-service --from-file=http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-service/${artifactVersion}/ose-wall-service-${artifactVersion}.jar"
+    openshiftVerifyBuild bldCfg: 'ose-wall-service', checkForTriggeredDeployments: 'false', namespace: 'my-dev-project', verbose: 'false', waitTime: ''
+    sh "oc tag my-dev-projct/ose-wall-service:latest my-dev-projct/ose-wall-service:${artifactVersion}"
+   }
+ 
+   stage ('Deploy DEV') {
+    sh "oc project my-dev-project"
+    GET_DC_OUTPUT = sh (
+      script: "oc get dc/ose-wall-service",
+      returnStdout: true
+    ).trim()
+    
+    if GET_DC_OUTPUT.contains("not found") {
+      sh "oc new-app my-dev-projct/ose-wall-service:${artifactVersion}"
+      sh "oc expose svc/ose-wall-service --port=8080"
+    } 
+
+   }
+ 
+   stage ('Deploy QA') {
+     timeout(time:5, unit:'MINUTES') {
+       input message: "Promote to QA?", ok: "Promote"
+     }
+     //sh "oc tag my-dev-projct/ose-wall-service:latest my-qa-projct/ose-wall-service:${artifactVersion}"
+ 
+   }
 
 }
 

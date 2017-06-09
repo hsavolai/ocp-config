@@ -49,7 +49,7 @@ node('maven') {
     sh "oc project my-dev-project"
 
     def GET_BUILD_OUTPUT = sh (
-       script: "oc get all -l build=ose-wall-service 2>&1",
+       script: "oc get all -l build=ose-wall-service -n my-dev-project 2>&1",
       returnStdout: true
     ).trim()
   

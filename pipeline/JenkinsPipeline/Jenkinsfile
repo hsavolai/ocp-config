@@ -34,7 +34,7 @@ node('maven') {
     },
   'Static Analysis': {
     echo "Code analysis"
-    sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube:9000/ -Dsonar.projectName=${JOB_BASE_NAME}"
+    sh "${mvnCmd} jacoco:report sonar:sonar -Dsonar.host.url=http://sonarqube:9000/ -Dsonar.projectName=${JOB_BASE_NAME} -DskipTests=true"
    }
    )
    }

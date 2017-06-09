@@ -24,15 +24,20 @@ node('maven') {
     echo "The final artifact version is ${artifactVersion}"
   }
 
-  stage('Unit Tests') {
+  stage('Test and Analysis') {
+
+   parallel (
+   'Unit Test': {
     echo "Run unit tests"
     sh "${mvnCmd} -P test clean test"
-  }
-  
-  stage('Code Analysis') {
+    step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+    },
+  'Static Analysis': {
     echo "Code analysis"
     sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube:9000/ -Dsonar.projectName=${JOB_BASE_NAME}"
-  }
+   }
+   )
+   }
   
    stage('Publish to Nexus') {
      echo "Publish to Nexus"

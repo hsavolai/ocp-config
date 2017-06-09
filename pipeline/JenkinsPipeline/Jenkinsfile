@@ -19,7 +19,7 @@ node('maven') {
   ).trim()
 
   def unixTime = sh (
-    script: 'date +"%T"',
+    script: 'date +"%s"',
     returnStdout: true
    ).trim()
 

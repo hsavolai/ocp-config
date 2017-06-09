@@ -57,8 +57,8 @@ node('maven') {
     if (GET_BUILD_OUTPUT.contains("No resources found.")){
       sh "oc new-build --binary=true --name=ose-wall-service -i=redhat-openjdk18-openshift -n my-dev-project"
     }
-    
-    sh "oc start-build ose-wall-service --from-file=http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-service/${artifactVersion}/ose-wall-service-${artifactVersion}.jar -n my-dev-project"
+    sh "curl -O http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-service/${artifactVersion}/ose-wall-service-${artifactVersion}.jar"
+    sh "oc start-build ose-wall-service --from-file=./ose-wall-service-${artifactVersion}.jar -n my-dev-project"
     openshiftVerifyBuild bldCfg: 'ose-wall-service', checkForTriggeredDeployments: 'false', namespace: 'my-dev-project', verbose: 'false', waitTime: ''
     sh "oc tag my-dev-projct/ose-wall-service:latest my-dev-projct/ose-wall-service:${artifactVersion} -n my-dev-project"
    }

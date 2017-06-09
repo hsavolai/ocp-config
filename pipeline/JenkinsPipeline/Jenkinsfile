@@ -24,20 +24,20 @@ node('maven') {
     echo "The final artifact version is ${artifactVersion}"
   }
 
-  stage('Test and Analysis') {
+ // stage('Test and Analysis') {
 
-   parallel (
-   'Unit Test': {
-    echo "Run unit tests"
-    sh "${mvnCmd} -P test clean test"
-    step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
-    },
-  'Static Analysis': {
-    echo "Code analysis"
-    sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube:9000/ -Dsonar.projectName=${JOB_BASE_NAME} -DskipTests=true"
-   }
-   )
-   }
+ //  parallel (
+ //  'Unit Test': {
+ //   echo "Run unit tests"
+ //   sh "${mvnCmd} -P test clean test"
+ //   step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+ //   },
+ // 'Static Analysis': {
+ //   echo "Code analysis"
+ //   sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube:9000/ -Dsonar.projectName=${JOB_BASE_NAME} -DskipTests=true"
+ //  }
+ //  )
+ //  }
   
    stage('Publish to Nexus') {
      echo "Publish to Nexus"
@@ -46,8 +46,6 @@ node('maven') {
   
       
    stage('Build OpenShift Image') { 
-    sh "oc project my-dev-project"
-
     def GET_BUILD_OUTPUT = sh (
        script: "oc get all -l build=ose-wall-service -n my-dev-project 2>&1",
       returnStdout: true
@@ -56,12 +54,12 @@ node('maven') {
     echo "Get build output: ${GET_BUILD_OUTPUT}"
     
     if (GET_BUILD_OUTPUT.contains("No resources found.")){
-      sh "oc new-build --binary=true --name=ose-wall-service -i=redhat-openjdk18-openshift"
+      sh "oc new-build --binary=true --name=ose-wall-service -i=redhat-openjdk18-openshift -n my-dev-project"
     }
     
-    sh "oc start-build ose-wall-service --from-file=http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-service/${artifactVersion}/ose-wall-service-${artifactVersion}.jar"
+    sh "oc start-build ose-wall-service --from-file=http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-service/${artifactVersion}/ose-wall-service-${artifactVersion}.jar -n my-dev-project"
     openshiftVerifyBuild bldCfg: 'ose-wall-service', checkForTriggeredDeployments: 'false', namespace: 'my-dev-project', verbose: 'false', waitTime: ''
-    sh "oc tag my-dev-projct/ose-wall-service:latest my-dev-projct/ose-wall-service:${artifactVersion}"
+    sh "oc tag my-dev-projct/ose-wall-service:latest my-dev-projct/ose-wall-service:${artifactVersion} -n my-dev-project"
    }
 
 

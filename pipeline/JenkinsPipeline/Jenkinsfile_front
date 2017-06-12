@@ -1,14 +1,19 @@
 node('nodejs') {
   stage('Checkout Source') {
     echo "Checkout Source"
-    git 'https://github.com/hsavolai/ose-wallapp-ui.git'
-    git 'https://github.com/hsavolai/ose-router-ui.git'
+    dir('ose-wallapp-ui') {
+      git 'https://github.com/hsavolai/ose-wallapp-ui.git'
+    }
+    dir('ose-wallapp-router') {
+      git 'https://github.com/hsavolai/ose-router-ui.git'
+    }
     sh "npm config set registry http://nexus3:8081/repository/npm-all/"
-    sh "ls -la"
+    
   }
   
-  stage('Test') {
-    sh "npm install phantomjs-prebuilt"
+  stage('Resolve deps') {
+    sh "npm install --prefix ./ose-wallapp-ui"
+    sh "npm install --prefix ./ose-wallapp-router"
   }
 
 }

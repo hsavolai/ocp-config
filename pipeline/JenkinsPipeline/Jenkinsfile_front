@@ -4,6 +4,7 @@ node('nodejs') {
     git 'https://github.com/hsavolai/ose-wallapp-ui.git'
     git 'https://github.com/hsavolai/ose-router-ui.git'
     sh "npm config set registry http://nexus3:8081/repository/npm-all/"
+    sh "ls -la"
   }
   
   stage('Test') {

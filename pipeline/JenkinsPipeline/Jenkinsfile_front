@@ -1,0 +1,8 @@
+node('nodejs') {
+  stage('Checkout Source') {
+    echo "Checkout Source"
+    git 'https://github.com/hsavolai/ose-wallapp-ui.git'
+    git 'https://github.com/hsavolai/ose-router-ui.git'
+  }
+
+}

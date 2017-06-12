@@ -79,7 +79,7 @@ node('maven') {
 
     if (!GET_DC_OUTPUT){
       sh "oc new-app my-dev-project/ose-wall-service:${artifactVersion} -n my-dev-project -e OPENSHIFT_MYSQL_DB_HOST=msyql -e OPENSHIFT_MYSQL_DB_PORT=3306 -e OPENSHIFT_MYSQL_DB_USERNAME=mysli -e OPENSHIFT_MYSQL_DB_PASSWORD=mysli"
-      openshiftVerifyService apiURL: '', namespace: 'my-dev-project', svcName: 'tasks', verbose: 'false' 
+      openshiftVerifyService apiURL: '', namespace: 'my-dev-project', svcName: 'ose-wall-service', verbose: 'false' 
       sh "oc expose svc/ose-wall-service --port=8080 -n my-dev-project"
     } else {
 

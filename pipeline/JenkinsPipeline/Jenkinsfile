@@ -83,7 +83,7 @@ node('maven') {
       sh "oc expose svc/ose-wall-service --port=8080 -n my-dev-project"
     } else {
 
-     sh "oc patch dc ose-wall-service -n 'ose-wall-service' -p '{\"spec\": {\"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"ose-wall-service\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"my-dev-project\", \"name\": \"ose-wall-service:${artifactVersion}\"}}}]}}'"
+     sh "oc patch dc ose-wall-service -n 'my-dev-project' -p '{\"spec\": {\"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"ose-wall-service\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"my-dev-project\", \"name\": \"ose-wall-service:${artifactVersion}\"}}}]}}'"
      openshiftDeploy apiURL: '', authToken: '', depCfg: 'ose-wall-service', namespace: 'my-dev-project', verbose: 'false', waitTime: '', waitUnit: 'sec'
 
     }  

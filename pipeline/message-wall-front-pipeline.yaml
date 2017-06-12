@@ -1,0 +1,18 @@
+apiVersion: v1
+items:
+- kind: "BuildConfig"
+  apiVersion: "v1"
+  metadata:
+    app: "message-wall-front"
+    name: "message-wall-front-pipeline"
+  spec:
+    source:
+      type: "Git"
+      git:
+        uri: "https://github.com/hsavolai/ocp-config.git"
+    strategy:
+      type: "JenkinsPipeline"
+      jenkinsPipelineStrategy:
+        jenkinsfilePath: pipeline/JenkinsPipeline/Jenkinsfile_front
+kind: List
+metadata: []

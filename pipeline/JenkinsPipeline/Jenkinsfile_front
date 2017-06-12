@@ -3,6 +3,11 @@ node('nodejs') {
     echo "Checkout Source"
     git 'https://github.com/hsavolai/ose-wallapp-ui.git'
     git 'https://github.com/hsavolai/ose-router-ui.git'
+    sh "npm config set registry http://nexus3/repository/npm-all/"
+  }
+  
+  stage('Test') {
+    sh "npm install phantomjs"
   }
 
 }

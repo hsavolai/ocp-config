@@ -15,7 +15,7 @@ node('nodejs') {
     sh "npm install --prefix ./ose-wallapp-ui"
     sh "npm install @angular/cli@latest --prefix ./ose-wallapp-ui"
     sh "npm install --prefix ./ose-wallapp-router"
-    "npm cache clean -f
+    "npm cache clean -f"
     "npm install -g n"
     "n stable"
   }

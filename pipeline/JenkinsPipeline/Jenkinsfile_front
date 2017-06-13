@@ -24,7 +24,7 @@ node('nodejs') {
   
   stage('Build and package') {
     sh "npm test --prefix ./ose-wallapp-router"
-    sh "cd ./ose-wallapp-ui; ng build --base-href /wall/ --output-path ../ose-wallapp-router/public/wall -prod;cd .."
+    sh "cd ./ose-wallapp-ui; ./node_modules/angular-cli/bin/ng build --base-href /wall/ --output-path ../ose-wallapp-router/public/wall -prod;cd .."
   }
        
  //  stage('Publish to Nexus') {

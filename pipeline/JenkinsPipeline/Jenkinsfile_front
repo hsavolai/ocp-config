@@ -13,8 +13,8 @@ node('nodejs') {
   
   stage('Resolve deps') {
     sh "npm install --prefix ./ose-wallapp-ui"
+    sh "npm -g angular-cli --prefix ./ose-wallapp-ui"
     sh "npm install --prefix ./ose-wallapp-router"
-    sh "npm install --save-dev @angular/cli@latest"
   }
 
   stage('Test & Analysis') {

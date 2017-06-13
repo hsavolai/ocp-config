@@ -15,6 +15,9 @@ node('nodejs') {
     sh "npm install --prefix ./ose-wallapp-ui"
     sh "npm install @angular/cli@latest --prefix ./ose-wallapp-ui"
     sh "npm install --prefix ./ose-wallapp-router"
+    "npm cache clean -f
+    "npm install -g n"
+    "n stable"
   }
 
   stage('Test & Analysis') {
@@ -23,7 +26,6 @@ node('nodejs') {
   }
   
   stage('Build and package') {
-    sh "npm test --prefix ./ose-wallapp-router"
     sh "cd ./ose-wallapp-ui; ./node_modules/@angular/cli/bin/ng build --base-href /wall/ --output-path ../ose-wallapp-router/public/wall -prod;cd .."
   }
        

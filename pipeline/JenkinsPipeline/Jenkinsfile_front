@@ -16,4 +16,12 @@ node('nodejs') {
     sh "npm install --prefix ./ose-wallapp-router"
   }
 
+  stage('Test & Analysis') {
+    echo "Here should be ose-wallapp-ui Angular2 tests either with headless chrome or phantomjs for the UI/Karma"
+    sh "npm --prefix ./ose-router-ui test"
+  }
+  
+  
+
+
 }

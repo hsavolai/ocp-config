@@ -12,16 +12,17 @@ node('nodejs') {
   }
   
   stage('Resolve deps') {
-    sh "npm install --prefix ./ose-wallapp-ui"
-    sh "npm install @angular/cli@latest --prefix ./ose-wallapp-ui"
-    sh "npm install --prefix ./ose-wallapp-router"
     sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
     sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
+    sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-ui"
+    sh "./node-v6.10.3-linux-x64/bin/npm install @angular/cli@latest --prefix ./ose-wallapp-ui"
+    sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router"
+   
   }
 
   stage('Test & Analysis') {
     echo "Here should be ose-wallapp-ui Angular2 tests either with headless chrome or phantomjs for the UI/Karma"
-    sh "npm test --prefix ./ose-wallapp-router"
+    sh "./node-v6.10.3-linux-x64/bin/npm test --prefix ./ose-wallapp-router"
   }
   
   stage('Build and package') {

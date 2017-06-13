@@ -26,7 +26,7 @@ node('nodejs') {
   }
   
   stage('Build and package') {
-    sh "cd ./ose-wallapp-ui; ../node-v6.10.3-linux-x64/bin/node ./node_modules/@angular/cli/bin/ng build --base-href /wall/ --output-path ../ose-wallapp-router/public/wall -prod;cd .."
+    sh "cd ./ose-wallapp-ui; ../node-v6.10.3-linux-x64/bin/node ./node_modules/@angular/cli/bin/ng build --progress false --base-href /wall/ --output-path ../ose-wallapp-router/public/wall -prod;cd .."
   }
        
  //  stage('Publish to Nexus') {

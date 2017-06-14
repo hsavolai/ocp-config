@@ -80,7 +80,7 @@ node('nodejs') {
     }
     sh "curl -O http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-router-ui/${packageVersion}/ose-wall-router-ui-${packageVersion}.tar.gz"
     sh "oc start-build ose-wall-router-ui --from-archive=./ose-wall-router-ui-${packageVersion}.tar.gz -n my-dev-project"
-    openshiftVerifyBuild bldCfg: 'ose-wall-router-ui', checkForTriggeredDeployments: 'false', namespace: 'my-dev-project', verbose: 'false', waitTime: '100000'
+    openshiftVerifyBuild bldCfg: 'ose-wall-router-ui', checkForTriggeredDeployments: 'false', namespace: 'my-dev-project', verbose: 'false', waitTime: '300000'
     sh "oc tag my-dev-project/ose-wall-router-ui:latest my-dev-project/ose-wall-router-ui:${packageVersion} -n my-dev-project"
    }
 

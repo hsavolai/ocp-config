@@ -2,7 +2,6 @@ node('nodejs') {
   stage('Prepare node') {
     sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
     sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
-  
   }
   
   stage('Checkout Source') {
@@ -29,7 +28,7 @@ node('nodejs') {
 
   stage('Test & Analysis') {
     echo "Here should be ose-wallapp-ui Angular2 tests either with headless chrome or phantomjs for the UI/Karma"
-    sh "./node-v6.10.3-linux-x64/bin/npm test --prefix ./ose-wallapp-router"
+    sh "./node-v6.10.3-linux-x64/bin/npm test --prefix ./ose-wallapp-router-test"
   }
   
   stage('Build and package') {
@@ -41,6 +40,7 @@ node('nodejs') {
     sh "rm -rf ./ose-wallapp-router-prod/test"
     sh "rm -rf ./ose-wallapp-router-prod/LICENSE"
     sh "rm -rf ./ose-wallapp-router-prod/README.md"
+    sh "rm -rf ./ose-wallapp-router-prod/.git"
     
     echo "The version is ${version}"
     

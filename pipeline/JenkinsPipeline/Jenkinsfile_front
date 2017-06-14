@@ -7,11 +7,11 @@ node('nodejs') {
     dir('ose-wallapp-router-test') {
       git 'https://github.com/hsavolai/ose-router-ui.git'
     }
+    sh "npm config set registry http://nexus3:8081/repository/npm-all/"  
     sh "cp -r ./ose-wallapp-router-test ose-wallapp-router-prod"
-    sh "npm config set registry http://nexus3:8081/repository/npm-all/"    
   }
   
-  def version = getVersionFromPackageJs("ose-wallapp-router-test/package.json")
+  def version = getVersionFromPackageJs("./ose-wallapp-router-test/package.json")
   
   stage('Resolve test deps') {
     sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"

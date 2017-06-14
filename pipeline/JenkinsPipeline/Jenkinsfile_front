@@ -15,8 +15,7 @@ node('nodejs') {
     sh "./node-v6.10.3-linux-x64/bin/npm config set registry http://nexus3:8081/repository/npm-all/"  
     sh "cp -r ./ose-wallapp-router-test ose-wallapp-router-prod"
   }
-  
-  def version = getVersionFromPackageJs("./ose-wallapp-router-test/package.json")
+
   def packageVersion = null
 
   def buildNumber = sh (

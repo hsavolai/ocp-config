@@ -6,9 +6,8 @@ node('nodejs') {
     }
     dir('ose-wallapp-router-test') {
       git 'https://github.com/hsavolai/ose-router-ui.git'
-      sh "cp -r ose-wallapp-router-test oce-wallapp-router-prod"
     }
-   
+    sh "cp -r ./ose-wallapp-router-test ose-wallapp-router-prod"
     sh "npm config set registry http://nexus3:8081/repository/npm-all/"    
   }
   

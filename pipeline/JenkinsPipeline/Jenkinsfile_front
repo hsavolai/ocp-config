@@ -19,7 +19,7 @@ node('nodejs') {
   def packageVersion = null
 
   def buildNumber = sh (
-    script: "git -C ose-wallapp-router-test rev-list --all --count",
+    script: "cd ose-wallapp-router-test; git rev-list --all --count; cd ..",
     returnStdout: true
   ).trim()
 
@@ -58,7 +58,7 @@ node('nodejs') {
     sh "rm -rf ./ose-wallapp-router-prod/README.md"
     sh "rm -rf ./ose-wallapp-router-prod/.git"
     
-    sh "tar -C ./ose-wallapp-router-prod cvf ose-wallapp-router-${packageVersion}.tar.gz ."
+    sh "tar -C ./ose-wallapp-router-prod czf ose-wallapp-router-${packageVersion}.tar.gz ."
   }
 
 }

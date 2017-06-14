@@ -58,12 +58,12 @@ node('nodejs') {
     sh "rm -rf ./ose-wallapp-router-prod/README.md"
     sh "rm -rf ./ose-wallapp-router-prod/.git"
     
-    sh "tar -C ./ose-wallapp-router-prod -czf ose-wallapp-router-${packageVersion}.tar.gz ."
+    sh "tar -C ./ose-wallapp-router-prod -czf ose-wall-router-ui-${packageVersion}.tar.gz ."
   }
   
   stage('Publish to Nexus') {
      echo "Publish to Nexus"
-     sh "curl -v -u admin:admin123 --upload-file ose-wallapp-router-${packageVersion}.tar.gz http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-router/${packageVersion}/ose-wallapp-router-${packageVersion}.tar.gz"  
+     sh "curl -v -u admin:admin123 --upload-file ose-wall-router-ui-${packageVersion}.tar.gz http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-router-ui/${packageVersion}/ose-wall-router-ui-${packageVersion}.tar.gz"  
    }
 
 

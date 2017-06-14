@@ -41,8 +41,7 @@ node('nodejs') {
     
   }
     
-  }
-       
+      
  //  stage('Publish to Nexus') {
  //    echo "Publish to Nexus"
  //    sh "curl -v -u admin:admin123 --upload-file README.md http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-front/0.0.1-test-1/ose-wall-front-0.0.1-test-1.zip"  

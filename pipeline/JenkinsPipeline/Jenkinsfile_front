@@ -76,10 +76,10 @@ node('nodejs') {
     echo "Get build output: ${GET_BUILD_OUTPUT}"
     
     if (GET_BUILD_OUTPUT.contains("No resources found.")){
-      sh "oc new-build --binary=true --name=ose-wall-service -i=nodejs -n my-dev-project"
+      sh "oc new-build --binary=true --name=ose-wall-router-ui -i=nodejs -n my-dev-project"
     }
     sh "curl -O http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-router-ui/${packageVersion}/ose-wall-router-ui-${packageVersion}.tar.gz"
-    sh "oc start-build ose-wall-service --from-archive=./ose-wall-router-ui-${packageVersion}.tar.gz -n my-dev-project"
+    sh "oc start-build ose-wall-router-ui --from-archive=./ose-wall-router-ui-${packageVersion}.tar.gz -n my-dev-project"
     openshiftVerifyBuild bldCfg: 'ose-wall-router-ui', checkForTriggeredDeployments: 'false', namespace: 'my-dev-project', verbose: 'false', waitTime: ''
     sh "oc tag my-dev-project/ose-wall-router-ui:latest my-dev-project/ose-wall-router-ui:${packageVersion} -n my-dev-project"
    }

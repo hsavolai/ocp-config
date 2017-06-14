@@ -17,7 +17,18 @@ node('nodejs') {
   }
   
   def version = getVersionFromPackageJs("./ose-wallapp-router-test/package.json")
-  
+  def packageVersion = null
+
+  def buildNumber = sh (
+    script: "git -C ose-wallapp-router-test rev-list --all --count",
+    returnStdout: true
+  ).trim()
+
+  def unixTime = sh (
+    script: 'date +"%s"',
+    returnStdout: true
+   ).trim()
+
   stage('Resolve test deps') {
     sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
     sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
@@ -31,6 +42,12 @@ node('nodejs') {
     sh "./node-v6.10.3-linux-x64/bin/npm test --prefix ./ose-wallapp-router-test"
   }
   
+  stage('Define version') {
+    def version = getVersionFromPackageJs("./se-wallapp-router-prod/package.json")
+    packageVersion = "${version}-${buildNumber}_${unixTime}"
+    echo "The final package version is ${packageVersion}"
+  }
+  
   stage('Build and package') {
     echo "Build production package"
     sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router-prod --production"
@@ -42,8 +59,7 @@ node('nodejs') {
     sh "rm -rf ./ose-wallapp-router-prod/README.md"
     sh "rm -rf ./ose-wallapp-router-prod/.git"
     
-    echo "The version is ${version}"
-    
+    sh "tar -C ./ose-wallapp-router-prod cvf ose-wallapp-router-${packageVersion}.tar.gz ."
   }
 
 }
@@ -56,7 +72,7 @@ node('nodejs') {
 
 // Convenience Functions to read variables from the pom.xml
 def getVersionFromPackageJs(packagejs) {
-  def matcher = readFile(packagejs) =~ '"version":"(.+)"'
+  def matcher = readFile(packagejs) =~ '"version": "(.+)",'
   matcher ? matcher[0][1] : null
 }
 

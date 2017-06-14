@@ -60,15 +60,17 @@ node('nodejs') {
     
     sh "tar -C ./ose-wallapp-router-prod -czf ose-wallapp-router-${packageVersion}.tar.gz ."
   }
+  
+  stage('Publish to Nexus') {
+     echo "Publish to Nexus"
+     sh "curl -v -u admin:admin123 --upload-file ose-wallapp-router-${packageVersion}.tar.gz http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-router/${packageVersion}/ose-wallapp-router-${packageVersion}.tar.gz"  
+   }
+
 
 }
 
       
- //  stage('Publish to Nexus') {
- //    echo "Publish to Nexus"
- //    sh "curl -v -u admin:admin123 --upload-file README.md http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-front/0.0.1-test-1/ose-wall-front-0.0.1-test-1.zip"  
- //  }
-
+ 
 // Convenience Functions to read variables from the pom.xml
 def getVersionFromPackageJs(packagejs) {
   def matcher = readFile(packagejs) =~ '"version": "(.+)",'

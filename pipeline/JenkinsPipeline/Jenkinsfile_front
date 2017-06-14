@@ -1,4 +1,10 @@
 node('nodejs') {
+  stage('Prepare node') {
+    sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
+    sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
+  
+  }
+  
   stage('Checkout Source') {
     echo "Checkout Source"
     dir('ose-wallapp-ui') {
@@ -7,7 +13,7 @@ node('nodejs') {
     dir('ose-wallapp-router-test') {
       git 'https://github.com/hsavolai/ose-router-ui.git'
     }
-    sh "npm config set registry http://nexus3:8081/repository/npm-all/"  
+    sh "./node-v6.10.3-linux-x64/bin/npm config set registry http://nexus3:8081/repository/npm-all/"  
     sh "cp -r ./ose-wallapp-router-test ose-wallapp-router-prod"
   }
   

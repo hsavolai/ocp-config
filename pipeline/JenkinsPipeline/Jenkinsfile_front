@@ -84,6 +84,27 @@ node('nodejs') {
     sh "oc tag my-dev-project/ose-wall-router-ui:latest my-dev-project/ose-wall-router-ui:${packageVersion} -n my-dev-project"
    }
 
+   stage ('Deploy DEV') {
+    sh "oc project my-dev-project"
+
+    def GET_DC_OUTPUT = sh (
+       script: "oc get dc/ose-wall-router-ui -n my-dev-project 2>&1",
+       returnStatus: true
+     ) == 0
+
+    if (!GET_DC_OUTPUT){
+      sh "oc new-app my-dev-project/ose-wall-router-ui:${packageVersion} -n my-dev-project -e BACKEND_SERVICE_URL='http://ose-wall-router-ui.cloudapps.twr.cc/messages/api'"
+      openshiftVerifyService apiURL: '', namespace: 'my-dev-project', svcName: 'ose-wall-router-ui', verbose: 'false' 
+      sh "oc expose svc/ose-wall-router-ui --port=8080 -n my-dev-project"
+    } else {
+
+     sh "oc patch dc ose-wall-service -n 'my-dev-project' -p '{\"spec\": {\"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"ose-wall-service\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"my-dev-project\", \"name\": \"ose-wall-router-ui:${packageVersion}\"}}}]}}'"
+     openshiftDeploy apiURL: '', authToken: '', depCfg: 'ose-wall-service', namespace: 'my-dev-project', verbose: 'false', waitTime: '', waitUnit: 'sec'
+
+    }  
+    openshiftVerifyDeployment depCfg: 'ose-wall-router-ui', namespace: 'my-dev-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
+  
+   }
 
 
 }

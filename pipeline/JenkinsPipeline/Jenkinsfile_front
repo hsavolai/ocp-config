@@ -58,7 +58,7 @@ node('nodejs') {
     sh "rm -rf ./ose-wallapp-router-prod/README.md"
     sh "rm -rf ./ose-wallapp-router-prod/.git"
     
-    sh "tar -C ./ose-wallapp-router-prod czf ose-wallapp-router-${packageVersion}.tar.gz ."
+    sh "tar -C ./ose-wallapp-router-prod -czf ose-wallapp-router-${packageVersion}.tar.gz ."
   }
 
 }

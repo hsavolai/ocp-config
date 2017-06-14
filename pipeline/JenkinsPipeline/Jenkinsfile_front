@@ -4,20 +4,22 @@ node('nodejs') {
     dir('ose-wallapp-ui') {
       git 'https://github.com/hsavolai/ose-wallapp-ui.git'
     }
-    dir('ose-wallapp-router') {
+    dir('ose-wallapp-router-test') {
       git 'https://github.com/hsavolai/ose-router-ui.git'
+      sh "cp -r ose-wallapp-router-test oce-wallapp-router-prod"
     }
-    sh "npm config set registry http://nexus3:8081/repository/npm-all/"
-    
+   
+    sh "npm config set registry http://nexus3:8081/repository/npm-all/"    
   }
   
-  stage('Resolve deps') {
+  def version = getVersionFromPackageJs("ose-wallapp-router-test/package.json")
+  
+  stage('Resolve test deps') {
     sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
     sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
     sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-ui"
     sh "./node-v6.10.3-linux-x64/bin/npm install @angular/cli@latest --prefix ./ose-wallapp-ui"
-    sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router"
-   
+    sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router-test"
   }
 
   stage('Test & Analysis') {
@@ -26,13 +28,31 @@ node('nodejs') {
   }
   
   stage('Build and package') {
-    sh "cd ./ose-wallapp-ui; ../node-v6.10.3-linux-x64/bin/node ./node_modules/@angular/cli/bin/ng build --progress false --base-href /wall/ --output-path ../ose-wallapp-router/public/wall -prod;cd .."
+    echo "Build production package"
+    sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router-prod --production"
+    sh "cd ./ose-wallapp-ui; ../node-v6.10.3-linux-x64/bin/node ./node_modules/@angular/cli/bin/ng build --progress false --base-href /wall/ --output-path ../ose-wallapp-router-prod/public/wall -prod;cd .."
+    
+    echo "Prepare production package"
+    sh "rm -rf ./ose-wallapp-router-prod/test"
+    sh "rm -rf ./ose-wallapp-router-prod/LICENSE"
+    sh "rm -rf ./ose-wallapp-router-prod/README.md"
+    
+    echo "The version is ${version}"
+    
+  }
+    
   }
        
  //  stage('Publish to Nexus') {
  //    echo "Publish to Nexus"
  //    sh "curl -v -u admin:admin123 --upload-file README.md http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-front/0.0.1-test-1/ose-wall-front-0.0.1-test-1.zip"  
  //  }
+
+// Convenience Functions to read variables from the pom.xml
+def getVersionFromPackageJs(packagejs) {
+  def matcher = readFile(packagejs) =~ '"version":"(.+)"'
+  matcher ? matcher[0][1] : null
+}
 
 
 }

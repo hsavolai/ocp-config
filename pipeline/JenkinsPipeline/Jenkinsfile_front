@@ -58,13 +58,32 @@ node('nodejs') {
     sh "rm -rf ./ose-wallapp-router-prod/README.md"
     sh "rm -rf ./ose-wallapp-router-prod/.git"
     
-    sh "tar -C ./ose-wallapp-router-prod -czf ose-wall-router-ui-${packageVersion}.tar.gz ."
+    sh "tar -C ./ose-wallapp-router-prod -czf tmp-ose-wall-router-ui-${packageVersion}.tar.gz ."
   }
   
   stage('Publish to Nexus') {
      echo "Publish to Nexus"
-     sh "curl -v -u admin:admin123 --upload-file ose-wall-router-ui-${packageVersion}.tar.gz http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-router-ui/${packageVersion}/ose-wall-router-ui-${packageVersion}.tar.gz"  
+     sh "curl -v -u admin:admin123 --upload-file tmp-ose-wall-router-ui-${packageVersion}.tar.gz http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-router-ui/${packageVersion}/ose-wall-router-ui-${packageVersion}.tar.gz"  
    }
+
+  stage('Build OpenShift Image') {
+    sh "oc project my-dev-project"
+    def GET_BUILD_OUTPUT = sh (
+       script: "oc get all -l build=ose-wall-router-ui -n my-dev-project 2>&1",
+      returnStdout: true
+    ).trim()
+  
+    echo "Get build output: ${GET_BUILD_OUTPUT}"
+    
+    if (GET_BUILD_OUTPUT.contains("No resources found.")){
+      sh "oc new-build --binary=true --name=ose-wall-service -i=nodejs-6-rhel7 -n my-dev-project"
+    }
+    sh "curl -O http://nexus3:8081/repository/maven-releases/org/savolainen/ose-wall-router-ui/${packageVersion}/ose-wall-router-ui-${packageVersion}.tar.gz"
+    sh "oc start-build ose-wall-service --from-archive=./ose-wall-router-ui-${packageVersion}.tar.gz -n my-dev-project"
+    openshiftVerifyBuild bldCfg: 'ose-wall-router-ui', checkForTriggeredDeployments: 'false', namespace: 'my-dev-project', verbose: 'false', waitTime: ''
+    sh "oc tag my-dev-project/ose-wall-router-ui:latest my-dev-project/ose-wall-router-ui:${packageVersion} -n my-dev-project"
+   }
+
 
 
 }

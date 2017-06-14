@@ -40,7 +40,9 @@ node('nodejs') {
     echo "The version is ${version}"
     
   }
-    
+
+}
+
       
  //  stage('Publish to Nexus') {
  //    echo "Publish to Nexus"
@@ -54,4 +56,3 @@ def getVersionFromPackageJs(packagejs) {
 }
 
 
-}

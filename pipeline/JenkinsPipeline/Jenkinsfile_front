@@ -93,7 +93,7 @@ node('nodejs') {
      ) == 0
 
     if (!GET_DC_OUTPUT){
-      sh "oc new-app my-dev-project/ose-wall-router-ui:${packageVersion} -n my-dev-project -e BACKEND_SERVICE_URL='http://ose-wall-router-ui.cloudapps.twr.cc/messages/api'"
+      sh "oc new-app my-dev-project/ose-wall-router-ui:${packageVersion} -n my-dev-project -e WALL_SERVICE_BASEURL='http://ose-wall-service'"
       openshiftVerifyService apiURL: '', namespace: 'my-dev-project', svcName: 'ose-wall-router-ui', verbose: 'false' 
       sh "oc expose svc/ose-wall-router-ui --port=8080 -n my-dev-project"
     } else {

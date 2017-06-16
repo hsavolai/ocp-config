@@ -107,6 +107,19 @@ node('nodejs') {
     openshiftVerifyDeployment depCfg: 'ose-wall-router-ui', namespace: 'my-dev-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
   
    }
+   
+    stage('Integration Test') {
+    applicationHostName = sh (
+      script: "oc get route ose-wall-router-ui -o template --template '{{ .spec.host }}' -n my-dev-project",
+      returnStdout: true
+    )
+    GET_HTTP_RESPCODE = sh (
+       script: "curl -s -o /dev/null -w '%{http_code}' http://${applicationHostName}/messages",
+       returnStdout: true
+    ) == "200"
+  
+    sh "oc tag my-dev-project/ose-wall-service:${artifactVersion} my-prod-project/ose-wall-service:prod-${artifactVersion} -n my-dev-project"
+  }
 
 
 }

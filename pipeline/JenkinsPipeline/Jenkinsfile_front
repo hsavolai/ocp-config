@@ -114,7 +114,7 @@ node('nodejs') {
       returnStdout: true
     )
     GET_HTTP_RESPCODE = sh (
-       script: "curl -s -o /dev/null -w '%{http_code}' http://${applicationHostName}/messages",
+       script: "curl -s -o /dev/null -w '%{http_code}' http://${applicationHostName}/sanity",
        returnStdout: true
     ) == "200"
   

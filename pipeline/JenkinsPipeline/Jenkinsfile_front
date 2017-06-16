@@ -118,7 +118,7 @@ node('nodejs') {
        returnStdout: true
     ) == "200"
   
-    sh "oc tag my-dev-project/ose-wall-service:${artifactVersion} my-prod-project/ose-wall-service:prod-${artifactVersion} -n my-dev-project"
+    sh "oc tag my-dev-project/ose-wall-router-ui:${packageVersion} my-prod-project/ose-wall-router-ui:prod-${packageVersion} -n my-dev-project"
   }
 
 

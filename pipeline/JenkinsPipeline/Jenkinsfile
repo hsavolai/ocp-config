@@ -79,8 +79,9 @@ node('maven') {
 
     if (!GET_DC_OUTPUT){
       sh "oc new-app my-dev-project/ose-wall-service:${artifactVersion} -n my-dev-project -e OPENSHIFT_MYSQL_DB_HOST=mysql -e OPENSHIFT_MYSQL_DB_PORT=3306 -e OPENSHIFT_MYSQL_DB_USERNAME=mysli -e OPENSHIFT_MYSQL_DB_PASSWORD=mysli"
-      openshiftVerifyService apiURL: '', namespace: 'my-dev-project', svcName: 'ose-wall-service', verbose: 'false' 
-      //sh "oc expose svc/ose-wall-service --port=8080 -n my-dev-project"
+      openshiftVerifyService apiURL: '', namespace: 'my-dev-project', svcName: 'ose-wall-service', verbose: 'false'
+      sh "oc set probe dc/ose-wall-service --readiness --failure-threshold 3 --initial-delay-seconds 30 --open-tcp=8080 -n my-dev-project"
+      sh "oc set probe dc/ose-wall-service --liveness --failure-threshold 3 --initial-delay-seconds 30 --open-tcp=8080 --timeout-seconds=10 -n my-dev-project"
     } else {
 
      sh "oc patch dc ose-wall-service -n 'my-dev-project' -p '{\"spec\": {\"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"ose-wall-service\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"my-dev-project\", \"name\": \"ose-wall-service:${artifactVersion}\"}}}]}}'"
@@ -90,6 +91,59 @@ node('maven') {
     openshiftVerifyDeployment depCfg: 'ose-wall-service', namespace: 'my-dev-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
   
    }
+ 
+  
+  stage('Integration Test') {
+    applicationHostName = sh (
+      script: "oc get route ose-wall-router-ui -o template --template '{{ .spec.host }}' -n my-dev-project",
+      returnStdout: true
+    )
+    GET_HTTP_RESPCODE = sh (
+       script: "curl -s -o /dev/null -w '%{http_code}' http://${applicationHostName}/messages",
+       returnStdout: true
+    ) == "200"
+  
+    sh "oc tag my-dev-project/ose-wall-service:${artifactVersion} my-prod-project/ose-wall-service:prod-${artifactVersion} -n my-dev-project"
+  }
+
+  // Blue/Green Deployment into Production
+  // -------------------------------------
+  def dest = ""
+
+  def currentDeployment = sh (
+    script: "oc get route tasks -n hs-tasks-prod -o jsonpath='{ .spec.to.name }'",
+    returnStdout: true
+  )
+  
+  stage('Prep Production Deployment') {
+    dest = (currentDeployment == 'hs-tasks-green') ? 'hs-tasks-blue' : 'hs-tasks-green'
+    echo "Active svc: " + currentDeployment
+    echo "Dest svc:   " + dest
+  }
+
+  stage('Deploy new Version') {
+    echo "Deploying to ${dest}"
+
+    // Patch the DeploymentConfig so that it points to the latest ProdReady-${version} Image:
+    sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"hs-tasks-dev\", \"name\": \"tasks:ProductionReady-$version\"}}}]}}' -n hs-tasks-prod"
+
+    openshiftDeploy depCfg: dest, namespace: 'hs-tasks-prod', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyDeployment depCfg: dest, namespace: 'hs-tasks-prod', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyService namespace: 'hs-tasks-prod', svcName: dest, verbose: 'false'
+  }
+  
+  stage('Switch over to new Version') {
+    input "Switch Production from $currentDeployment to $dest?"
+    sh 'oc patch route tasks -n hs-tasks-prod -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
+    sh 'oc get route tasks -n hs-tasks-prod > oc_out.txt'
+    oc_out = readFile('oc_out.txt')
+    echo "Current route configuration: " + oc_out
+  }
+ 
+ 
+ 
+ 
+ 
  
    stage ('Deploy QA') {
      timeout(time:5, unit:'MINUTES') {

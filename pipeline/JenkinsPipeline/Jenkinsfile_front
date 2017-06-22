@@ -1,8 +1,11 @@
-node('nodejs') {
-  stage('Prepare node') {
-    sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
-    sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
-  }
+node('phantomjs') {
+   
+   npmPath="./node-v6.10.3-linux-x64/bin"
+   
+   stage('Prepare node') {
+     sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
+     sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
+   }
   
   stage('Checkout Source') {
     echo "Checkout Source"
@@ -12,7 +15,10 @@ node('nodejs') {
     dir('ose-wallapp-router-test') {
       git 'https://github.com/hsavolai/ose-router-ui.git'
     }
-    sh "./node-v6.10.3-linux-x64/bin/npm config set registry http://nexus3:8081/repository/npm-all/"  
+    
+    withEnv(['PATH+NODE=$npmPath']) {
+      sh "npm config set registry http://nexus3:8081/repository/npm-all/"  
+    }
     sh "cp -r ./ose-wallapp-router-test ose-wallapp-router-prod"
   }
 
@@ -31,14 +37,17 @@ node('nodejs') {
   stage('Resolve test deps') {
     sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
     sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
-    sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-ui"
-    //sh "./node-v6.10.3-linux-x64/bin/npm install @angular/cli@latest --prefix ./ose-wallapp-ui"
-    sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router-test"
+    withEnv(['PATH+NODE=$npmPath']) {
+      sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-ui"
+      sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router-test"
+    }
   }
 
   stage('Test & Analysis') {
-    echo "Here should be ose-wallapp-ui Angular2 tests either with headless chrome or phantomjs for the UI/Karma"
-    sh "./node-v6.10.3-linux-x64/bin/npm test --prefix ./ose-wallapp-router-test"
+    withEnv(['PATH+NODE=$npmPath']) {
+      sh "npm run test-headless --prefix ./ose-wallapp-router-ui"
+      sh "npm test --prefix ./ose-wallapp-router-test"
+    }
   }
   
   stage('Define version') {
@@ -108,7 +117,7 @@ node('nodejs') {
   
    }
    
-    stage('Integration Test') {
+   stage('Integration Test') {
     applicationHostName = sh (
       script: "oc get route ose-wall-router-ui -o template --template '{{ .spec.host }}' -n my-dev-project",
       returnStdout: true
@@ -119,7 +128,7 @@ node('nodejs') {
     ) == "200"
   
     sh "oc tag my-dev-project/ose-wall-router-ui:${packageVersion} my-prod-project/ose-wall-router-ui:prod-${packageVersion} -n my-dev-project"
-  }
+   }
 
 
 }

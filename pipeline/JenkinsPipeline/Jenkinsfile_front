@@ -16,7 +16,7 @@ node('phantomjs') {
       git 'https://github.com/hsavolai/ose-router-ui.git'
     }
     
-    withEnv(['PATH+NODE=$npmPath']) {
+    withEnv(["PATH+NODE=${npmPath}"]) {
       sh "npm config set registry http://nexus3:8081/repository/npm-all/"  
     }
     sh "cp -r ./ose-wallapp-router-test ose-wallapp-router-prod"
@@ -37,14 +37,14 @@ node('phantomjs') {
   stage('Resolve test deps') {
     sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
     sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
-    withEnv(['PATH+NODE=$npmPath']) {
+    withEnv(["PATH+NODE=${npmPath}"]) {
       sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-ui"
       sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router-test"
     }
   }
 
   stage('Test & Analysis') {
-    withEnv(['PATH+NODE=$npmPath']) {
+    withEnv(["PATH+NODE=${npmPath}"]) {
       sh "npm run test-headless --prefix ./ose-wallapp-router-ui"
       sh "npm test --prefix ./ose-wallapp-router-test"
     }

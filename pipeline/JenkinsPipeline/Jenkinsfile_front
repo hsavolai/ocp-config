@@ -9,7 +9,7 @@ node('phantomjs') {
   
   stage('Checkout Source') {
     echo "Checkout Source"
-    dir('ose-wallapp-ui') {
+    dir('ose-wallapp-ui-test') {
       git 'https://github.com/hsavolai/ose-wallapp-ui.git'
     }
     dir('ose-wallapp-router-test') {
@@ -20,6 +20,7 @@ node('phantomjs') {
       sh "npm config set registry http://nexus3:8081/repository/npm-all/"  
     }
     sh "cp -r ./ose-wallapp-router-test ose-wallapp-router-prod"
+    sh "cp -r ./ose-wallapp-ui-test ose-wallapp-ui-prod"
   }
 
   def packageVersion = null
@@ -58,9 +59,10 @@ node('phantomjs') {
   
   stage('Build and package') {
     echo "Build production package"
-    sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router-prod --production"
-    sh "cd ./ose-wallapp-ui; ../node-v6.10.3-linux-x64/bin/node ./node_modules/@angular/cli/bin/ng build --progress false --base-href /wall/ --output-path ../ose-wallapp-router-prod/public/wall -prod;cd .."
-    
+    withEnv(["PATH+NODE=${npmPath}"]) {
+     sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router-prod --production"
+     sh "cd ./ose-wallapp-ui; ../node-v6.10.3-linux-x64/bin/node ./node_modules/@angular/cli/bin/ng build --progress false --base-href /wall/ --output-path ../ose-wallapp-router-prod/public/wall -prod;cd .."
+    }
     echo "Prepare production package"
     sh "rm -rf ./ose-wallapp-router-prod/test"
     sh "rm -rf ./ose-wallapp-router-prod/LICENSE"

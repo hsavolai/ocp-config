@@ -36,17 +36,15 @@ node('phantomjs') {
    ).trim()
 
   stage('Resolve test deps') {
-    sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
-    sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
     withEnv(["PATH+NODE=${npmPath}"]) {
-      sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-ui"
-      sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router-test"
+      sh "npm install --prefix ./ose-wallapp-ui-test"
+      sh "npm install --prefix ./ose-wallapp-router-test"
     }
   }
 
   stage('Test & Analysis') {
     withEnv(["PATH+NODE=${npmPath}"]) {
-      sh "npm run test-headless --prefix ./ose-wallapp-router-ui"
+      sh "npm run test-headless --prefix ./ose-wallapp-router-ui-test"
       sh "npm test --prefix ./ose-wallapp-router-test"
     }
   }
@@ -60,8 +58,8 @@ node('phantomjs') {
   stage('Build and package') {
     echo "Build production package"
     withEnv(["PATH+NODE=${npmPath}"]) {
-     sh "./node-v6.10.3-linux-x64/bin/npm install --prefix ./ose-wallapp-router-prod --production"
-     sh "cd ./ose-wallapp-ui; ../node-v6.10.3-linux-x64/bin/node ./node_modules/@angular/cli/bin/ng build --progress false --base-href /wall/ --output-path ../ose-wallapp-router-prod/public/wall -prod;cd .."
+     sh "npm install --prefix ./ose-wallapp-router-prod --production"
+     sh "cd ./ose-wallapp-ui-prod; node ./node_modules/@angular/cli/bin/ng build --progress false --base-href /wall/ --output-path ../ose-wallapp-router-prod/public/wall -prod;cd .."
     }
     echo "Prepare production package"
     sh "rm -rf ./ose-wallapp-router-prod/test"

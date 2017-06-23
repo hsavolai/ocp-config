@@ -18,6 +18,7 @@ node('phantomjs') {
     
     withEnv(["PATH+NODE=${npmPath}"]) {
       sh "npm config set registry http://nexus3:8081/repository/npm-all/"  
+      sh "npm set progress=false"
     }
     sh "cp -r ./ose-wallapp-router-test ose-wallapp-router-prod"
     sh "cp -r ./ose-wallapp-ui-test ose-wallapp-ui-prod"
@@ -59,7 +60,7 @@ node('phantomjs') {
     echo "Build production package"
     withEnv(["PATH+NODE=${npmPath}"]) {
      sh "npm install --prefix ./ose-wallapp-router-prod --production"
-     sh "cd ./ose-wallapp-ui-prod; node ./node_modules/@angular/cli/bin/ng build --progress false --base-href /wall/ --output-path ../ose-wallapp-router-prod/public/wall -prod;cd .."
+     sh "cd ./ose-wallapp-ui-prod;${npmPath}/node ./node_modules/@angular/cli/bin/ng build --progress false --base-href /wall/ --output-path ../ose-wallapp-router-prod/public/wall -prod;cd .."
     }
     echo "Prepare production package"
     sh "rm -rf ./ose-wallapp-router-prod/test"

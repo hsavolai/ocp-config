@@ -1,6 +1,6 @@
 node('phantomjs') {
    
-   npmPath="./node-v6.10.3-linux-x64/bin"
+   npmPath="${env.JENKINS_URL}/node-v6.10.3-linux-x64/bin"
    
    stage('Prepare node') {
      sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"

@@ -44,7 +44,7 @@ node('phantomjs') {
 
   stage('Test & Analysis') {
     withEnv(["PATH+NODE=${npmPath}"]) {
-      sh "npm run test-headless --prefix ./ose-wallapp-router-ui-test"
+      sh "npm run test-headless --prefix ./ose-wallapp-ui-test"
       sh "npm test --prefix ./ose-wallapp-router-test"
     }
   }

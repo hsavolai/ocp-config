@@ -5,7 +5,6 @@ node('phantomjs') {
    stage('Prepare node') {
      sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
      sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
-     sh "chmod u+x ${npmPath}/node"
    }
   
   stage('Checkout Source') {
@@ -61,6 +60,7 @@ node('phantomjs') {
     echo "Build production package"
     withEnv(["PATH+NODE=${npmPath}"]) {
      sh "npm install --prefix ./ose-wallapp-router-prod --production"
+     sh "npm install --prefix ./ose-wallapp-ui-prod --production"
      sh "cd ./ose-wallapp-ui-prod;node ./node_modules/@angular/cli/bin/ng build --progress false --base-href /wall/ --output-path ../ose-wallapp-router-prod/public/wall -prod;cd .."
     }
     echo "Prepare production package"

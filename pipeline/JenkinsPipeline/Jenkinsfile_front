@@ -207,13 +207,20 @@ node('phantomjs') {
 
   def dest = ""
 
-  def currentDeployment = sh (
+  stage('Prep Production Deployment') {
+  sh "oc project my-prod-project"
+  
+  def currentDeployment = ""
+  
+  try {
+  currentDeployment = sh (
     script: "oc get route ose-wall-router-ui -n my-prod-project -o jsonpath='{ .spec.to.name }'",
     returnStdout: true
   )
-  
-  stage('Prep Production Deployment') {
-    dest = (currentDeployment == 'ose-wall-router-ui-green') ? 'ose-wall-router-ui-blue' : 'hose-wall-router-ui-green'
+  } catch(Exception e1) {
+  }
+ 
+    dest = (currentDeployment == 'ose-wall-router-ui-green') ? 'ose-wall-router-ui-blue' : 'ose-wall-router-ui-green'
     echo "Active svc: " + currentDeployment
     echo "Dest svc:   " + dest
   }

@@ -206,11 +206,10 @@ node('phantomjs') {
    }
 
   def dest = ""
+  def currentDeployment = ""
 
   stage('Prep Production Deployment') {
   sh "oc project my-prod-project"
-  
-  def currentDeployment = ""
   
   try {
   currentDeployment = sh (

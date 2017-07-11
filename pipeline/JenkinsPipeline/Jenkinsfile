@@ -1,4 +1,3 @@
-// Here it shall be
 node('maven') {
 
   def mvnCmd = "mvn -s ./nexus-openshift-settings.xml -B"
@@ -92,72 +91,7 @@ node('maven') {
   
    }
  
-  
-  stage('Integration Test') {
-    applicationHostName = sh (
-      script: "oc get route ose-wall-router-ui -o template --template '{{ .spec.host }}' -n my-dev-project",
-      returnStdout: true
-    )
-    GET_HTTP_RESPCODE = sh (
-       script: "curl -s -o /dev/null -w '%{http_code}' http://${applicationHostName}/messages",
-       returnStdout: true
-    ) == "200"
-  
-    sh "oc tag my-dev-project/ose-wall-service:${artifactVersion} my-prod-project/ose-wall-service:prod-${artifactVersion} -n my-dev-project"
-  }
-
-  // Blue/Green Deployment into Production
-  // -------------------------------------
-  def dest = ""
-
-  def currentDeployment = sh (
-    script: "oc get route tasks -n hs-tasks-prod -o jsonpath='{ .spec.to.name }'",
-    returnStdout: true
-  )
-  
-  stage('Prep Production Deployment') {
-    dest = (currentDeployment == 'hs-tasks-green') ? 'hs-tasks-blue' : 'hs-tasks-green'
-    echo "Active svc: " + currentDeployment
-    echo "Dest svc:   " + dest
-  }
-
-  stage('Deploy new Version') {
-    echo "Deploying to ${dest}"
-
-    // Patch the DeploymentConfig so that it points to the latest ProdReady-${version} Image:
-    sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"hs-tasks-dev\", \"name\": \"tasks:ProductionReady-$version\"}}}]}}' -n hs-tasks-prod"
-
-    openshiftDeploy depCfg: dest, namespace: 'hs-tasks-prod', verbose: 'false', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyDeployment depCfg: dest, namespace: 'hs-tasks-prod', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyService namespace: 'hs-tasks-prod', svcName: dest, verbose: 'false'
-  }
-  
-  stage('Switch over to new Version') {
-    input "Switch Production from $currentDeployment to $dest?"
-    sh 'oc patch route tasks -n hs-tasks-prod -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
-    sh 'oc get route tasks -n hs-tasks-prod > oc_out.txt'
-    oc_out = readFile('oc_out.txt')
-    echo "Current route configuration: " + oc_out
-  }
- 
- 
- 
- 
- 
- 
-   stage ('Deploy QA') {
-     timeout(time:5, unit:'MINUTES') {
-       input message: "Promote to QA?", ok: "Promote"
-     }
-     //sh "oc tag my-dev-projct/ose-wall-service:latest my-qa-projct/ose-wall-service:${artifactVersion}"
- 
-   }
-
 }
-
-//node('nodejs') {
-//  sh "ls" 
-//}
 
 // Convenience Functions to read variables from the pom.xml
 def getVersionFromPom(pom) {

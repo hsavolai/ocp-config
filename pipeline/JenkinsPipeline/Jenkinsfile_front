@@ -1,13 +1,16 @@
+// Custom jenkins slave image with phantomjs dependencies
 node('phantomjs') {
    
    npmPath="${env.WORKSPACE}/node-v6.10.3-linux-x64/bin"
    
    stage('Prepare node') {
+     // Download and extract nodejs
      sh "curl -O https://nodejs.org/download/release/v6.10.3/node-v6.10.3-linux-x64.tar.gz"
      sh "tar xzf node-v6.10.3-linux-x64.tar.gz"
    }
   
   stage('Checkout Source') {
+    // SCM Checkout
     echo "Checkout Source"
     dir('ose-wallapp-ui-test') {
       git 'https://github.com/hsavolai/ose-wallapp-ui.git'
@@ -43,7 +46,7 @@ node('phantomjs') {
     }
   }
 
-  stage('Test & Analysis') {
+  stage('Unit test & Analysis') {
     withEnv(["PATH+NODE=${npmPath}"]) {
       sh "npm run test-headless --prefix ./ose-wallapp-ui-test"
       sh "npm test --prefix ./ose-wallapp-router-test"
@@ -120,8 +123,67 @@ node('phantomjs') {
    }
    
    stage('Integration Test') {
+     timeout(time:5, unit:'MINUTES') {
+       input message: "Promote to integration?", ok: "Promote"
+     }   
+    sh "oc project my-front-int-project"
+    sh "oc tag my-dev-project/ose-wall-router-ui:${packageVersion} my-front-int-project/ose-wall-router-ui:qa-${packageVersion} -n my-dev-project"
+    
+    
+    try { 
+     sh "oc delete all -l int=db -n my-front-int-project"
+    } catch(Exception e1) {
+      // Do nothing
+    }
+    
+    try { 
+     sh "oc delete secret mysql -n my-front-int-project"
+    } catch(Exception e1) {
+      // Do nothing
+    }
+    
+    try { 
+     sh "oc delete all -l int=fe -n my-front-int-project"
+    } catch(Exception e1) {
+      // Do nothing
+    }
+    
+     try { 
+     sh "oc delete all -l int=be -n my-front-int-project"
+    } catch(Exception e1) {
+      // Do nothing
+    }
+    
+    try { 
+     sh "oc delete route/ose-wall-router-ui -n my-front-int-project"
+    } catch(Exception e1) {
+      // Do nothing
+    }
+    
+    
+    sh "oc new-app mysql-ephemeral --param MYSQL_USER=mysli --param MYSQL_PASSWORD=mysli --param MYSQL_DATABASE=message -n my-front-int-project --name=mysql -l int=db"
+    sh 'oc set probe dc/mysql --readiness --failure-threshold 3 --initial-delay-seconds 30 -n my-front-int-project -- /bin/sh -i -c "mysql -uroot -Dmessage -e \'SELECT 1 from message\' || mysql -u root -D message -e \'CREATE TABLE message (ID int(11) NOT NULL AUTO_INCREMENT,Alias varchar(5000) NOT NULL,Content varchar(15000) NOT NULL, Date varchar(50) NOT NULL,PRIMARY KEY (ID))\'"'
+    openshiftVerifyDeployment depCfg: 'mysql', namespace: 'my-front-int-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
+    echo "Waiting for mysql to be settled..."
+    //sleep 10
+
+    sh "oc new-app my-dev-project/ose-wall-service:latest -n my-front-int-project -e OPENSHIFT_MYSQL_DB_HOST=mysql -e OPENSHIFT_MYSQL_DB_PORT=3306 -e OPENSHIFT_MYSQL_DB_USERNAME=mysli -e OPENSHIFT_MYSQL_DB_PASSWORD=mysli -l int=be"
+    openshiftVerifyDeployment depCfg: 'ose-wall-service', namespace: 'my-front-int-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
+    sh "oc set probe dc/ose-wall-service --readiness --failure-threshold 3 --initial-delay-seconds 30 --open-tcp=8080 -n my-front-int-project"
+    sh "oc set probe dc/ose-wall-service --liveness --failure-threshold 3 --initial-delay-seconds 30 --open-tcp=8080 --timeout-seconds=10 -n my-front-int-project"
+    echo "Waiting for service to be settled..."
+    //sleep 10
+  
+    sh "oc new-app my-dev-project/ose-wall-router-ui:latest -n my-front-int-project -e WALL_SERVICE_BASEURL='http://ose-wall-service:8080' -e PORT=8080 -l int=fe"
+    sh "oc set probe dc/ose-wall-router-ui --readiness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-front-int-project"
+    sh "oc set probe dc/ose-wall-router-ui --liveness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-front-int-project" 
+    sh "oc expose svc/ose-wall-router-ui --port=8080 -n my-front-int-project"
+    openshiftVerifyDeployment depCfg: 'ose-wall-router-ui', namespace: 'my-front-int-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
+    echo "Waiting for service to be settled..."
+    //sleep 10
+    
     applicationHostName = sh (
-      script: "oc get route ose-wall-router-ui -o template --template '{{ .spec.host }}' -n my-dev-project",
+      script: "oc get route ose-wall-router-ui -o template --template '{{ .spec.host }}' -n my-front-int-project",
       returnStdout: true
     )
     GET_HTTP_RESPCODE = sh (
@@ -129,7 +191,8 @@ node('phantomjs') {
        returnStdout: true
     ) == "200"
   
-    sh "oc tag my-dev-project/ose-wall-router-ui:${packageVersion} my-prod-project/ose-wall-router-ui:prod-${packageVersion} -n my-dev-project"
+    sh "oc tag my-front-int-project/ose-wall-router-ui:qa-${packageVersion} my-prod-project/ose-wall-router-ui:prod-${packageVersion} -n my-front-int-project"
+
    }
 
 

@@ -236,7 +236,7 @@ node('phantomjs') {
       sh "oc expose svc/${dest} --port=8080 -n my-prod-project"
       sh "oc set probe dc/${dest} --readiness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-prod-project"
       sh "oc set probe dc/${dest} --liveness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-prod-project"
-      sh 'oc set triggers dc/${dest} --remove-all -n my-prod-project'
+      sh "oc set triggers dc/${dest} --remove-all -n my-prod-project"
     } else {
      sh "oc patch dc ${dest} -n 'my-prod-project' -p '{\"spec\": {\"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"${dest}\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"my-prod-project\", \"name\": \"ose-wall-router-ui:prod-${packageVersion}\"}}}]}}'"
      openshiftDeploy apiURL: '', authToken: '', depCfg: '${dest}', namespace: 'my-prod-project', verbose: 'false', waitTime: '', waitUnit: 'sec'

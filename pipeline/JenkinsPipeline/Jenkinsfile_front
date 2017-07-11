@@ -233,12 +233,12 @@ node('phantomjs') {
 
     if (!GET_DC_OUTPUT){
       sh "oc new-app my-prod-project/ose-wall-router-ui:prod-${packageVersion} --name ${dest} -n my-prod-project --allow-missing-imagestream-tags=true -e WALL_SERVICE_BASEURL='http://ose-wall-service'"
-      sh "oc expose svc/ose-wall-router-ui --port=8080 -n my-prod-project"
-      sh "oc set probe dc/ose-wall-router-ui --readiness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-prod-project"
-      sh "oc set probe dc/ose-wall-router-ui --liveness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-prod-project"
-      sh 'oc set triggers dc/ose-wall-router-ui --remove-all -n my-prod-project'
+      sh "oc expose svc/${dest} --port=8080 -n my-prod-project"
+      sh "oc set probe dc/${dest} --readiness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-prod-project"
+      sh "oc set probe dc/${dest} --liveness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-prod-project"
+      sh 'oc set triggers dc/${dest} --remove-all -n my-prod-project'
     } else {
-     sh "oc patch dc ose-wall-router-ui -n 'my-prod-project' -p '{\"spec\": {\"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"ose-wall-router-ui\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"my-prod-project\", \"name\": \"ose-wall-router-ui:prod-${packageVersion}\"}}}]}}'"
+     sh "oc patch dc ${dest} -n 'my-prod-project' -p '{\"spec\": {\"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"${dest}\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"my-prod-project\", \"name\": \"ose-wall-router-ui:prod-${packageVersion}\"}}}]}}'"
      openshiftDeploy apiURL: '', authToken: '', depCfg: 'ose-wall-router-ui', namespace: 'my-prod-project', verbose: 'false', waitTime: '', waitUnit: 'sec'
     }  
     openshiftVerifyDeployment depCfg: dest, namespace: 'my-prod-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'

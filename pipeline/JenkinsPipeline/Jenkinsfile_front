@@ -186,10 +186,23 @@ node('phantomjs') {
       script: "oc get route ose-wall-router-ui -o template --template '{{ .spec.host }}' -n my-front-int-project",
       returnStdout: true
     )
-    GET_HTTP_RESPCODE = sh (
-       script: "curl -s -o /dev/null -w '%{http_code}' http://${applicationHostName}/sanity",
+    
+    GET_HTTP_RESPCODE_POST = sh (
+       script: "curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 -m 5 -H \"Content-Type: application/json\" -X POST -d '{\"content\": \"Foo\", \"alias\": \"Bar\"}' http://${applicationHostName}/api/messages",
+       returnStdout: true
+    ) == "201"
+    
+    GET_HTTP_RESPCODE_GET = sh (
+       script: "curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 -m 5 -H \"Content-Type: application/json\" http://${applicationHostName}/api/messages",
        returnStdout: true
     ) == "200"
+    
+    GET_HTTP_RESPCODE_GET_CONTENT = sh (
+       script: "curl -s --connect-timeout 2 -m 5 -H \"Content-Type: application/json\" http://${applicationHostName}/api/messages",
+       returnStdout: true
+    )
+
+    assert GET_HTTP_RESPCODE_GET_CONTENT.indexOf("Foo") > 0
   
     sh "oc tag my-front-int-project/ose-wall-router-ui:qa-${packageVersion} my-prod-project/ose-wall-router-ui:prod-${packageVersion} -n my-front-int-project"
 

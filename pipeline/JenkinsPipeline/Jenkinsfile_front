@@ -239,7 +239,7 @@ node('phantomjs') {
       sh "oc set triggers dc/${dest} --remove-all -n my-prod-project"
     } else {
      sh "oc patch dc ${dest} -n 'my-prod-project' -p '{\"spec\": {\"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"${dest}\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"my-prod-project\", \"name\": \"ose-wall-router-ui:prod-${packageVersion}\"}}}]}}'"
-     openshiftDeploy apiURL: '', authToken: '', depCfg: '${dest}', namespace: 'my-prod-project', verbose: 'false', waitTime: '', waitUnit: 'sec'
+     openshiftDeploy apiURL: '', authToken: '', depCfg: dest, namespace: 'my-prod-project', verbose: 'false', waitTime: '', waitUnit: 'sec'
     }  
     openshiftVerifyDeployment depCfg: dest, namespace: 'my-prod-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
   }

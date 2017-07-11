@@ -244,11 +244,8 @@ node('phantomjs') {
     oc_out = readFile('oc_out.txt')
     echo "Current route configuration: " + oc_out
   }
-   }
 
 }
-
-      
  
 // Convenience Functions to read variables from the pom.xml
 def getVersionFromPackageJs(packagejs) {

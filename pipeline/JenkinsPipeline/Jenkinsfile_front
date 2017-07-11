@@ -163,24 +163,21 @@ node('phantomjs') {
     
     sh "oc new-app mysql-ephemeral --param MYSQL_USER=mysli --param MYSQL_PASSWORD=mysli --param MYSQL_DATABASE=message -n my-front-int-project --name=mysql -l int=db"
     sh 'oc set probe dc/mysql --readiness --failure-threshold 3 --initial-delay-seconds 30 -n my-front-int-project -- /bin/sh -i -c "mysql -uroot -Dmessage -e \'SELECT 1 from message\' || mysql -u root -D message -e \'CREATE TABLE message (ID int(11) NOT NULL AUTO_INCREMENT,Alias varchar(5000) NOT NULL,Content varchar(15000) NOT NULL, Date varchar(50) NOT NULL,PRIMARY KEY (ID))\'"'
+    sh 'oc set triggers dc/mysql --remove-all -n my-front-int-project'
     openshiftVerifyDeployment depCfg: 'mysql', namespace: 'my-front-int-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
-    echo "Waiting for mysql to be settled..."
-    //sleep 10
 
-    sh "oc new-app my-dev-project/ose-wall-service:latest -n my-front-int-project -e OPENSHIFT_MYSQL_DB_HOST=mysql -e OPENSHIFT_MYSQL_DB_PORT=3306 -e OPENSHIFT_MYSQL_DB_USERNAME=mysli -e OPENSHIFT_MYSQL_DB_PASSWORD=mysli -l int=be"
-    openshiftVerifyDeployment depCfg: 'ose-wall-service', namespace: 'my-front-int-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
+    sh "oc new-app my-dev-project/ose-wall-service:latest --allow-missing-imagestream-tags=true -n my-front-int-project -e OPENSHIFT_MYSQL_DB_HOST=mysql -e OPENSHIFT_MYSQL_DB_PORT=3306 -e OPENSHIFT_MYSQL_DB_USERNAME=mysli -e OPENSHIFT_MYSQL_DB_PASSWORD=mysli -l int=be"
     sh "oc set probe dc/ose-wall-service --readiness --failure-threshold 3 --initial-delay-seconds 30 --open-tcp=8080 -n my-front-int-project"
     sh "oc set probe dc/ose-wall-service --liveness --failure-threshold 3 --initial-delay-seconds 30 --open-tcp=8080 --timeout-seconds=10 -n my-front-int-project"
-    echo "Waiting for service to be settled..."
-    //sleep 10
+    sh 'oc set triggers dc/ose-wall-service --remove-all -n my-front-int-project'
+    openshiftVerifyDeployment depCfg: 'ose-wall-service', namespace: 'my-front-int-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
   
-    sh "oc new-app my-front-int-project/ose-wall-router-ui:qa-${packageVersion} -n my-front-int-project -e WALL_SERVICE_BASEURL='http://ose-wall-service:8080' -e PORT=8080 -l int=fe"
+    sh "oc new-app my-front-int-project/ose-wall-router-ui:qa-${packageVersion} --allow-missing-imagestream-tags=true -n my-front-int-project -e WALL_SERVICE_BASEURL='http://ose-wall-service:8080' -e PORT=8080 -l int=fe"
     sh "oc set probe dc/ose-wall-router-ui --readiness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-front-int-project"
     sh "oc set probe dc/ose-wall-router-ui --liveness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-front-int-project" 
     sh "oc expose svc/ose-wall-router-ui --port=8080 -n my-front-int-project"
+    sh 'oc set triggers dc/ose-wall-router-ui --remove-all -n my-front-int-project'
     openshiftVerifyDeployment depCfg: 'ose-wall-router-ui', namespace: 'my-front-int-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
-    echo "Waiting for service to be settled..."
-    //sleep 10
     
     applicationHostName = sh (
       script: "oc get route ose-wall-router-ui -o template --template '{{ .spec.host }}' -n my-front-int-project",
@@ -208,6 +205,46 @@ node('phantomjs') {
 
    }
 
+  def dest = ""
+
+  def currentDeployment = sh (
+    script: "oc get route ose-wall-router-ui -n my-prod-project -o jsonpath='{ .spec.to.name }'",
+    returnStdout: true
+  )
+  
+  stage('Prep Production Deployment') {
+    dest = (currentDeployment == 'ose-wall-router-ui-green') ? 'ose-wall-router-ui-blue' : 'hose-wall-router-ui-green'
+    echo "Active svc: " + currentDeployment
+    echo "Dest svc:   " + dest
+  }
+
+  stage('Deploy new Version') {
+     def GET_DC_OUTPUT = sh (
+       script: "oc get dc/ose-wall-router-ui -n my-prod-project 2>&1",
+       returnStatus: true
+     ) == 0
+
+    if (!GET_DC_OUTPUT){
+      sh "oc new-app my-prod-project/ose-wall-router-ui:prod-${packageVersion} --name ${dest} -n my-prod-project --allow-missing-imagestream-tags=true -e WALL_SERVICE_BASEURL='http://ose-wall-service'"
+      sh "oc expose svc/ose-wall-router-ui --port=8080 -n my-prod-project"
+      sh "oc set probe dc/ose-wall-router-ui --readiness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-prod-project"
+      sh "oc set probe dc/ose-wall-router-ui --liveness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-prod-project"
+      sh 'oc set triggers dc/ose-wall-router-ui --remove-all -n my-prod-project'
+    } else {
+     sh "oc patch dc ose-wall-router-ui -n 'my-prod-project' -p '{\"spec\": {\"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"ose-wall-router-ui\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"my-prod-project\", \"name\": \"ose-wall-router-ui:prod-${packageVersion}\"}}}]}}'"
+     openshiftDeploy apiURL: '', authToken: '', depCfg: 'ose-wall-router-ui', namespace: 'my-prod-project', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    }  
+    openshiftVerifyDeployment depCfg: dest, namespace: 'my-prod-project', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
+  }
+  
+  stage('Switch over to new Version') {
+    input "Switch Production from $currentDeployment to $dest?"
+    sh 'oc patch route tasks -n hs-tasks-prod -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
+    sh 'oc get route tasks -n hs-tasks-prod > oc_out.txt'
+    oc_out = readFile('oc_out.txt')
+    echo "Current route configuration: " + oc_out
+  }
+   }
 
 }
 

@@ -214,7 +214,7 @@ node('phantomjs') {
   
   try {
   currentDeployment = sh (
-    script: "oc get route ose-wall-router-ui -n my-prod-project -o jsonpath='{ .spec.to.name }'",
+    script: "oc get route wall -n my-prod-project -o jsonpath='{ .spec.to.name }'",
     returnStdout: true
   )
   } catch(Exception e1) {
@@ -246,10 +246,9 @@ node('phantomjs') {
   
   stage('Switch over to new Version') {
     input "Switch Production from $currentDeployment to $dest?"
-    sh 'oc patch route tasks -n hs-tasks-prod -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
-    sh 'oc get route tasks -n hs-tasks-prod > oc_out.txt'
-    oc_out = readFile('oc_out.txt')
-    echo "Current route configuration: " + oc_out
+    sh 'oc patch route wall -n my-prod-project -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
+    echo "Active deployment is currently:"
+    sh 'oc get route wall -n my-prod-project'
   }
 
 }

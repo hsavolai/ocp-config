@@ -174,7 +174,7 @@ node('phantomjs') {
     echo "Waiting for service to be settled..."
     //sleep 10
   
-    sh "oc new-app my-dev-project/ose-wall-router-ui:latest -n my-front-int-project -e WALL_SERVICE_BASEURL='http://ose-wall-service:8080' -e PORT=8080 -l int=fe"
+    sh "oc new-app my-front-int-project/ose-wall-router-ui:qa-${packageVersion} -n my-front-int-project -e WALL_SERVICE_BASEURL='http://ose-wall-service:8080' -e PORT=8080 -l int=fe"
     sh "oc set probe dc/ose-wall-router-ui --readiness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-front-int-project"
     sh "oc set probe dc/ose-wall-router-ui --liveness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-front-int-project" 
     sh "oc expose svc/ose-wall-router-ui --port=8080 -n my-front-int-project"

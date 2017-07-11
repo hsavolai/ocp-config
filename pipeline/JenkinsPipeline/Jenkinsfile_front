@@ -107,7 +107,7 @@ node('phantomjs') {
      ) == 0
 
     if (!GET_DC_OUTPUT){
-      sh "oc new-app my-dev-project/ose-wall-router-ui:${packageVersion} -n my-dev-project -e WALL_SERVICE_BASEURL='http://ose-wall-service'"
+      sh "oc new-app my-dev-project/ose-wall-router-ui:${packageVersion} -n my-dev-project -e PORT=8080 -e WALL_SERVICE_BASEURL='http://ose-wall-service'"
       openshiftVerifyService apiURL: '', namespace: 'my-dev-project', svcName: 'ose-wall-router-ui', verbose: 'false' 
       sh "oc expose svc/ose-wall-router-ui --port=8080 -n my-dev-project"
       sh "oc set probe dc/ose-wall-router-ui --readiness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-dev-project"
@@ -232,7 +232,7 @@ node('phantomjs') {
      ) == 0
 
     if (!GET_DC_OUTPUT){
-      sh "oc new-app my-prod-project/ose-wall-router-ui:prod-${packageVersion} --name ${dest} -n my-prod-project --allow-missing-imagestream-tags=true -e WALL_SERVICE_BASEURL='http://ose-wall-service'"
+      sh "oc new-app my-prod-project/ose-wall-router-ui:prod-${packageVersion} --name ${dest} -n my-prod-project --allow-missing-imagestream-tags=true -e PORT=8080 -e WALL_SERVICE_BASEURL='http://ose-wall-service:8080'"
       sh "oc expose svc/${dest} --port=8080 -n my-prod-project"
       sh "oc set probe dc/${dest} --readiness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-prod-project"
       sh "oc set probe dc/${dest} --liveness --get-url=http://:8080/sanity --failure-threshold 3 --initial-delay-seconds 10 -n my-prod-project"
